@@ -148,6 +148,65 @@
     html.light .pill.ok { color: #047857; } html.light .pill.bad { color: #be123c; } html.light .pill.gold { color: #b45309; } html.light .pill.info { color: #0369a1; }
     html.light .cell.ok, html.light .weekchip.ok { color: #047857; } html.light .cell.bad, html.light .weekchip.bad { color: #be123c; }
     html.light ::-webkit-scrollbar-thumb { background: rgba(14,116,144,.35); }
+
+    /* ====== CHỦ ĐỀ GIÁNG SINH ====== */
+    #xmasLights { display: none; }
+    html.xmas #xmasLights {
+      display: block; position: relative; height: 26px; overflow: hidden; pointer-events: none;
+      background: linear-gradient(#374151, #374151) 0 8px / 100% 2px no-repeat;
+    }
+    html.xmas #xmasLights::before, html.xmas #xmasLights::after {
+      content: ""; position: absolute; inset: 0; background-repeat: repeat-x; background-size: 160px 26px;
+      filter: drop-shadow(0 0 5px rgba(255, 214, 120, .75));
+    }
+    html.xmas #xmasLights::before {
+      background-image: radial-gradient(circle at 20px 16px, #ef4444 0 5px, transparent 6px), radial-gradient(circle at 100px 16px, #fbbf24 0 5px, transparent 6px);
+      animation: xmasTwinkleA 1.8s ease-in-out infinite;
+    }
+    html.xmas #xmasLights::after {
+      background-image: radial-gradient(circle at 60px 16px, #22c55e 0 5px, transparent 6px), radial-gradient(circle at 140px 16px, #38bdf8 0 5px, transparent 6px);
+      animation: xmasTwinkleB 1.8s ease-in-out infinite;
+    }
+    @keyframes xmasTwinkleA { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+    @keyframes xmasTwinkleB { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { html.xmas #xmasLights::before, html.xmas #xmasLights::after { animation: none !important; } }
+    body.no-fx #xmasLights::before, body.no-fx #xmasLights::after { animation: none !important; }
+
+    html.xmas:not(.light) body { background: #0b1a14; }
+    html.xmas:not(.light) #bgOverlay {
+      background:
+        radial-gradient(520px 380px at 8% 6%, rgba(220, 38, 38, .26), transparent 70%),
+        radial-gradient(560px 420px at 94% 14%, rgba(22, 163, 74, .24), transparent 70%),
+        linear-gradient(180deg, rgba(5, 12, 9, .2) 0%, rgba(5, 12, 9, .55) 100%);
+    }
+    html.xmas .glass { border-color: rgba(251, 191, 36, .28); }
+    html.xmas .glass-card:hover { border-color: rgba(248, 113, 113, .7); box-shadow: 0 14px 32px -8px rgba(220, 38, 38, .4); }
+    html.xmas .tabbtn-on { background: linear-gradient(90deg, #b91c1c, #15803d); box-shadow: 0 6px 16px -6px rgba(220, 38, 38, .7); }
+    html.xmas #statusBar { background-image: linear-gradient(90deg, rgba(185, 28, 28, .92), rgba(21, 128, 61, .92), rgba(185, 28, 28, .92)) !important; border-bottom-color: rgba(251, 191, 36, .5); }
+    html.xmas #btnToggleAdmin { background-color: #fbbf24 !important; }
+    html.xmas #btnNewWeek { background-image: linear-gradient(90deg, #dc2626, #15803d) !important; }
+    html.xmas #celebrate { background-image: linear-gradient(90deg, #16a34a, #dc2626, #16a34a) !important; }
+    html.xmas .brand-logo { position: relative; background-image: linear-gradient(135deg, #dc2626, #15803d) !important; border-color: rgba(251, 191, 36, .7) !important; }
+    html.xmas .brand-logo::before { content: ""; position: absolute; top: -10px; left: -5px; width: 30px; height: 16px; background: #dc2626; border-radius: 16px 16px 2px 2px; transform: rotate(-18deg); box-shadow: inset 0 -4px 0 #fff; }
+    html.xmas .brand-logo::after { content: ""; position: absolute; top: -14px; left: -9px; width: 9px; height: 9px; border-radius: 50%; background: #fff; }
+    html.xmas h1::after { content: " 🎄"; }
+    html.xmas .minibar > i { background: linear-gradient(90deg, #34d399, #fbbf24); }
+    html.xmas #bottomNav button.on { color: #fbbf24; }
+    html.xmas ::-webkit-scrollbar-thumb { background: rgba(220, 38, 38, .55); }
+    html.xmas:not(.light) [class*="text-sky-100"], html.xmas:not(.light) [class*="text-sky-200"] { color: #fde68a; }
+    html.xmas:not(.light) [class*="text-sky-300"] { color: #fcd34d; }
+
+    html.light.xmas body { background: linear-gradient(160deg, #fff1f2 0%, #f0fdf4 52%, #fefce8 100%); }
+    html.light.xmas #bgOverlay {
+      background:
+        radial-gradient(520px 380px at 10% 8%, rgba(248, 113, 113, .28), transparent 70%),
+        radial-gradient(560px 420px at 92% 18%, rgba(74, 222, 128, .24), transparent 70%),
+        radial-gradient(500px 400px at 60% 95%, rgba(251, 191, 36, .18), transparent 70%);
+    }
+    html.light.xmas #shaderCanvas { display: block; }
+    html.light.xmas .glass { border-color: rgba(185, 28, 28, .18); }
+    html.light.xmas #bottomNav button.on { color: #b91c1c; }
+    html.light.xmas [class*="text-sky-300"] { color: #b91c1c !important; }
   </style>
 </head>
 <body class="pb-28 sm:pb-10 mode-viewer">
@@ -156,6 +215,9 @@
 <div id="bgOverlay"></div>
 <canvas id="shaderCanvas"></canvas>
 <canvas id="confettiCanvas"></canvas>
+
+<!-- DÂY ĐÈN GIÁNG SINH (chỉ hiện ở chủ đề Giáng sinh) -->
+<div id="xmasLights" aria-hidden="true"></div>
 
 <!-- THANH TRẠNG THÁI PHÂN QUYỀN & ĐỒNG BỘ -->
 <div id="statusBar" class="bg-gradient-to-r from-sky-600/90 via-indigo-600/90 to-blue-700/90 backdrop-blur-md text-white text-xs py-2 px-4 shadow-md border-b border-sky-300/30">
@@ -177,7 +239,7 @@
 <!-- HEADER -->
 <header class="sticky top-0 z-40 glass">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-    <div class="h-11 w-11 rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 grid place-items-center text-white font-black text-sm shadow-lg border border-sky-200/50 shrink-0">12A6</div>
+    <div class="brand-logo h-11 w-11 rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 grid place-items-center text-white font-black text-sm shadow-lg border border-sky-200/50 shrink-0">12A6</div>
     <div class="min-w-0 flex-1">
       <h1 class="text-base sm:text-lg font-black tracking-tight truncate drop-shadow">Sổ Quỹ Lớp 12A6</h1>
       <p id="subtitle" class="text-xs text-sky-100/80 truncate mt-0.5">Đang nạp dữ liệu…</p>
@@ -448,8 +510,8 @@
       <div id="setTheme" class="grid grid-cols-3 gap-2"></div>
     </div>
     <div class="space-y-1.5">
-      <p class="text-xs font-extrabold text-sky-300">Ảnh nền (giao diện tối)</p>
-      <div id="setBg" class="grid grid-cols-2 gap-2"></div>
+      <p class="text-xs font-extrabold text-sky-300">Chủ đề nền</p>
+      <div id="setBg" class="grid grid-cols-3 gap-2"></div>
     </div>
     <div class="space-y-1.5">
       <p class="text-xs font-extrabold text-sky-300">Hiệu ứng động (đom đóm, đếm số, chuyển cảnh)</p>
@@ -634,18 +696,20 @@ function isLight() {
   try { return !!(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches); } catch (e) { return false; }
 }
 function applyTheme() {
-  var l = isLight(), r = document.documentElement;
-  r.classList.toggle("light", l); r.classList.toggle("dark", !l);
-  var mt = document.querySelector('meta[name="theme-color"]'); if (mt) mt.setAttribute("content", l ? "#e0f2fe" : "#070d1f");
+  var l = isLight(), r = document.documentElement, xm = currentBgMode === "xmas";
+  r.classList.toggle("light", l); r.classList.toggle("dark", !l); r.classList.toggle("xmas", xm);
+  var mt = document.querySelector('meta[name="theme-color"]'); if (mt) mt.setAttribute("content", l ? (xm ? "#fff1f2" : "#e0f2fe") : (xm ? "#0b1a14" : "#070d1f"));
   var b = $("btnTheme"); if (b) b.textContent = l ? "🌙" : "☀️";
   fxRestart();
 }
 
 // ----- Nền tối + hiệu ứng -----
-var currentBgMode = lsGet(BGMODE_KEY, "night") === "sunset" ? "sunset" : "night";
+var XMAS_BG = "radial-gradient(900px 500px at 15% 0%, rgba(220,38,38,.35), transparent 60%), radial-gradient(900px 600px at 100% 30%, rgba(22,163,74,.32), transparent 60%), linear-gradient(180deg, #0b1a14 0%, #0f2a1f 60%, #2a0b12 100%)";
+var currentBgMode = (function() { var m = lsGet(BGMODE_KEY, "xmas"); return /^(night|sunset|xmas)$/.test(m) ? m : "xmas"; })();
 function applyDefaultBg() {
   var el = $("bgWallpaper");
-  el.style.backgroundImage = "url('" + (currentBgMode === "night" ? BG_NIGHT_PORTAL : BG_SUNSET_LAKE) + "')";
+  el.style.backgroundImage = currentBgMode === "xmas" ? XMAS_BG : "url('" + (currentBgMode === "night" ? BG_NIGHT_PORTAL : BG_SUNSET_LAKE) + "')";
+  applyTheme();
 }
 function fxPref() { var m = lsGet(FX_KEY, "auto"); return /^(auto|on|off)$/.test(m) ? m : "auto"; }
 function fxOn() {
@@ -659,10 +723,23 @@ function fxOn() {
 }
 var fx = { raf: 0, pts: null, w: 0, h: 0, ctx: null };
 function fxSize() { var c = $("shaderCanvas"); fx.w = c.width = window.innerWidth; fx.h = c.height = window.innerHeight; }
+function fxActive() { return fxOn() && !document.hidden && (currentBgMode === "xmas" || !isLight()); }
 function fxLoop() {
-  if (!(fxOn() && !isLight() && !document.hidden)) { fx.raf = 0; try { fx.ctx.clearRect(0, 0, fx.w, fx.h); } catch (e) {} return; }
+  if (!fxActive()) { fx.raf = 0; try { fx.ctx.clearRect(0, 0, fx.w, fx.h); } catch (e) {} return; }
   var ctx = fx.ctx, w = fx.w, h = fx.h, color = currentBgMode === "night" ? "125, 211, 252" : "253, 224, 71";
   ctx.clearRect(0, 0, w, h);
+  if (currentBgMode === "xmas") {
+    var lite = isLight();
+    fx.snow.forEach(function(f) {
+      f.p += 0.02; f.x += Math.sin(f.p) * 0.4 + f.vx; f.y += f.vy;
+      if (f.y > h + 6) { f.y = -6; f.x = Math.random() * w; }
+      if (f.x > w + 6) f.x = -6; else if (f.x < -6) f.x = w + 6;
+      ctx.fillStyle = lite ? "rgba(96, 165, 250, " + (f.a * 0.8) + ")" : "rgba(255, 255, 255, " + f.a + ")";
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+    });
+    fx.raf = requestAnimationFrame(fxLoop);
+    return;
+  }
   fx.pts.forEach(function(f) {
     f.x = (f.x + f.vx + w) % w; f.y = (f.y + f.vy + h) % h; f.p += 0.035;
     ctx.fillStyle = "rgba(" + color + ", " + (0.3 + 0.35 * Math.sin(f.p)) + ")";
@@ -677,9 +754,10 @@ function fxRestart() {
     if (!fx.ctx) {
       fx.ctx = $("shaderCanvas").getContext("2d"); fxSize();
       fx.pts = Array.from({ length: 28 }, function() { return { x: Math.random() * fx.w, y: Math.random() * fx.h, r: Math.random() * 2 + 0.8, vx: (Math.random() - 0.5) * 0.35, vy: -Math.random() * 0.4 - 0.1, p: Math.random() * 6 }; });
+      fx.snow = Array.from({ length: 70 }, function() { var r = Math.random() * 2.2 + 1; return { x: Math.random() * fx.w, y: Math.random() * fx.h, r: r, vx: (Math.random() - 0.5) * 0.3, vy: 0.35 + r * 0.25, a: 0.45 + Math.random() * 0.45, p: Math.random() * 6 }; });
       window.addEventListener("resize", fxSize);
     }
-    if (fxOn() && !isLight() && !document.hidden) fx.raf = requestAnimationFrame(fxLoop);
+    if (fxActive()) fx.raf = requestAnimationFrame(fxLoop);
     else fx.ctx.clearRect(0, 0, fx.w, fx.h);
   } catch (e) {}
 }
@@ -1359,7 +1437,7 @@ function launchConfetti() {
   if (!fxOn()) return;
   var c = $("confettiCanvas"), ctx; try { ctx = c.getContext("2d"); } catch (e) { return; }
   if (!ctx || !window.requestAnimationFrame) return;
-  var w = c.width = window.innerWidth, h = c.height = window.innerHeight, cols = ["#34d399", "#38bdf8", "#fbbf24", "#fb7185", "#a78bfa", "#f472b6"];
+  var w = c.width = window.innerWidth, h = c.height = window.innerHeight, cols = currentBgMode === "xmas" ? ["#ef4444", "#22c55e", "#fbbf24", "#ffffff", "#dc2626", "#16a34a"] : ["#34d399", "#38bdf8", "#fbbf24", "#fb7185", "#a78bfa", "#f472b6"];
   var ps = Array.from({ length: 140 }, function() { return { x: w / 2 + (Math.random() - 0.5) * 120, y: h * 0.35, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 13 - 3, s: Math.random() * 7 + 4, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: cols[(Math.random() * cols.length) | 0] }; });
   var t0 = performance.now();
   (function frame(t) {
@@ -1779,7 +1857,7 @@ function segButtons(boxId, opts, cur, onPick) {
 }
 function renderSettings() {
   segButtons("setTheme", [["dark", "🌙 Tối"], ["light", "☀️ Sáng"], ["auto", "📱 Tự động"]], themeMode(), function(v) { lsSet(THEME_KEY, v); applyTheme(); renderCharts(db.sheets[state.week]); });
-  segButtons("setBg", [["night", "🌙 Đêm trăng"], ["sunset", "🌅 Hoàng hôn"]], currentBgMode, function(v) { currentBgMode = v; lsSet(BGMODE_KEY, v); applyDefaultBg(); });
+  segButtons("setBg", [["xmas", "🎄 Giáng sinh"], ["night", "🌙 Đêm trăng"], ["sunset", "🌅 Hoàng hôn"]], currentBgMode, function(v) { currentBgMode = v; lsSet(BGMODE_KEY, v); applyDefaultBg(); });
   segButtons("setFx", [["auto", "Tự động"], ["on", "Bật"], ["off", "Tắt"]], fxPref(), function(v) { lsSet(FX_KEY, v); fxRestart(); });
   $("setPrivacy").checked = !!db.privacy;
   var me = getMe(); $("meBox").classList.toggle("hidden", !me); if (me) $("meName").textContent = NAMES[me - 1];
