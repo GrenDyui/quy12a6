@@ -236,6 +236,21 @@
     html.xmas .glass-card { position: relative; }
     html.xmas .glass-card::before { content: ""; position: absolute; left: 16px; right: 16px; top: 0; height: 3px; border-radius: 0 0 4px 4px; background: repeating-linear-gradient(45deg, #dc2626 0 8px, #fff 8px 16px); opacity: .9; pointer-events: none; }
     html.xmas #statusBar { box-shadow: 0 4px 18px -6px rgba(220, 38, 38, .6); }
+
+    /* V2: tuyết bám trên nút + hạt tuyết văng khi hover/bấm */
+    .xmas-snow-cap { display: none; }
+    html.xmas .xmas-snow-cap {
+      display: block; position: absolute; top: -6px; left: -2px; right: -2px; height: 15px; pointer-events: none; z-index: 20;
+      filter: drop-shadow(0 2px 2px rgba(15, 23, 42, .18)); transform-origin: top center;
+      transition: transform .35s cubic-bezier(.22, 1, .36, 1), opacity .3s ease;
+    }
+    html.xmas .xmas-snow-cap svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    html.xmas .xmas-btn-snow { transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s ease; }
+    html.xmas .xmas-btn-snow::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 2px 4px rgba(255, 255, 255, .45); opacity: .85; }
+    html.xmas .xmas-btn-snow:hover .xmas-snow-cap { transform: translateY(-1px) scaleY(.82); }
+    html.xmas .xmas-btn-snow:active .xmas-snow-cap { transform: translateY(2px) scaleY(.45); opacity: .65; }
+    .xmas-snow-burst { position: fixed; background: #fff; border-radius: 50%; pointer-events: none; z-index: 60; box-shadow: 0 0 6px rgba(255, 255, 255, .9); }
+    html.xmas .glass-card { box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .55), inset 0 2px 6px rgba(255, 255, 255, .22); }
   </style>
 </head>
 <body class="pb-28 sm:pb-10 mode-viewer">
@@ -729,6 +744,7 @@ function isLight() {
 function applyTheme() {
   var l = isLight(), r = document.documentElement, xm = currentBgMode === "xmas";
   r.classList.toggle("light", l); r.classList.toggle("dark", !l); r.classList.toggle("xmas", xm);
+  if (xm && typeof queueSnowScan === "function") queueSnowScan();
   var mt = document.querySelector('meta[name="theme-color"]'); if (mt) mt.setAttribute("content", l ? (xm ? "#fff1f2" : "#e0f2fe") : (xm ? "#0b1a14" : "#070d1f"));
   var b = $("btnTheme"); if (b) b.textContent = l ? "🌙" : "☀️";
   fxRestart();
@@ -752,7 +768,7 @@ function fxOn() {
   if (n.hardwareConcurrency && n.hardwareConcurrency <= 2) return false;
   return true;
 }
-var fx = { raf: 0, pts: null, w: 0, h: 0, ctx: null };
+var fx = { raf: 0, pts: null, w: 0, h: 0, ctx: null, wind: 0, windT: 0 };
 function fxSize() { var c = $("shaderCanvas"); fx.w = c.width = window.innerWidth; fx.h = c.height = window.innerHeight; }
 function fxActive() { return fxOn() && !document.hidden && (currentBgMode === "xmas" || !isLight()); }
 function fxLoop() {
@@ -767,8 +783,9 @@ function fxLoop() {
       ctx.beginPath(); ctx.arc(s.nx * w, s.ny * h, s.r, 0, Math.PI * 2); ctx.fill();
       if (s.r > 1.3) { ctx.fillRect(s.nx * w - s.r * 2.2, s.ny * h - 0.4, s.r * 4.4, 0.8); ctx.fillRect(s.nx * w - 0.4, s.ny * h - s.r * 2.2, 0.8, s.r * 4.4); }
     });
+    fx.wind += (fx.windT - fx.wind) * 0.03;
     fx.snow.forEach(function(f) {
-      f.p += 0.02; f.x += Math.sin(f.p) * 0.4 + f.vx; f.y += f.vy;
+      f.p += 0.02; f.x += Math.sin(f.p) * 0.4 + f.vx + fx.wind * f.r * 0.35; f.y += f.vy;
       if (f.y > h + 6) { f.y = -6; f.x = Math.random() * w; }
       if (f.x > w + 6) f.x = -6; else if (f.x < -6) f.x = w + 6;
       ctx.fillStyle = lite ? "rgba(96, 165, 250, " + (f.a * 0.8) + ")" : "rgba(255, 255, 255, " + f.a + ")";
@@ -800,6 +817,74 @@ function fxRestart() {
   } catch (e) {}
 }
 document.addEventListener("visibilitychange", fxRestart);
+
+// ----- Tuyết bám trên nút + hạt tuyết văng khi hover/bấm (chủ đề Giáng sinh) -----
+var SNOW_CAPS = [
+  "M0,6 Q12,0 26,4 T55,5 T82,3 Q94,0 100,6 L100,9 Q92,15 83,10 Q74,8 65,12 Q52,16 42,10 Q28,7 18,13 Q8,15 0,9 Z",
+  "M0,5 Q15,1 32,4 T68,3 Q85,0 100,5 L100,8 Q90,16 82,9 Q66,7 54,13 Q46,18 38,10 Q22,8 14,15 Q6,11 0,8 Z",
+  "M0,6 Q18,0 38,4 T75,4 Q90,1 100,6 L100,9 Q88,13 76,10 Q60,15 48,9 Q30,14 16,9 Q7,12 0,9 Z"
+];
+var snowBtnCount = 0, snowScanQueued = false, snowBursts = [], snowBurstRaf = 0;
+function snowCapEl(i) {
+  var s = document.createElement("span"); s.className = "xmas-snow-cap";
+  s.innerHTML = '<svg viewBox="0 0 100 18" preserveAspectRatio="none"><path d="' + SNOW_CAPS[i % 3] + '" fill="#f8fafc"/></svg>';
+  return s;
+}
+function snowBurstLoop(ts) {
+  snowBursts = snowBursts.filter(function(p) {
+    var dt = (ts - p.t0) / 1000;
+    if (dt > 0.65) { p.el.remove(); return false; }
+    if (dt < 0) dt = 0;
+    var o = 1 - dt / 0.65;
+    p.el.style.transform = "translate3d(" + (p.vx * dt) + "px," + (p.vy * dt + 32.5 * dt * dt) + "px,0) scale(" + o + ")";
+    p.el.style.opacity = o; return true;
+  });
+  snowBurstRaf = snowBursts.length ? requestAnimationFrame(snowBurstLoop) : 0;
+}
+function spawnSnowBurst(btn, count) {
+  if (currentBgMode !== "xmas" || !fxOn()) return;
+  var r = btn.getBoundingClientRect(), t0 = performance.now();
+  for (var i = 0; i < count; i++) {
+    var el = document.createElement("div"), s = 3 + Math.random() * 4;
+    el.className = "xmas-snow-burst"; el.style.width = el.style.height = s + "px";
+    el.style.left = (r.left + Math.random() * r.width) + "px"; el.style.top = (r.top + Math.random() * 6 - 3) + "px";
+    document.body.appendChild(el);
+    snowBursts.push({ el: el, t0: t0, vx: (Math.random() - 0.5) * 45, vy: -10 - Math.random() * 20 });
+  }
+  if (!snowBurstRaf) snowBurstRaf = requestAnimationFrame(snowBurstLoop);
+}
+function applySnowToButtons() {
+  snowScanQueued = false;
+  if (currentBgMode !== "xmas") return;
+  document.querySelectorAll("button, .btn, a[role='button']").forEach(function(btn) {
+    if (btn.closest("#bottomNav") || btn.querySelector(":scope > .xmas-snow-cap")) return;
+    var w = btn.offsetWidth; if (w > 0 && w < 32) return;
+    if (getComputedStyle(btn).position === "static") btn.style.position = "relative";
+    btn.classList.add("xmas-btn-snow");
+    var cap = snowCapEl(snowBtnCount++); btn.appendChild(cap);
+    if (btn.dataset.xmasSnow === "1") return;
+    btn.dataset.xmasSnow = "1";
+    var last = 0;
+    btn.addEventListener("mouseenter", function() { var n = Date.now(); if (n - last > 600) { spawnSnowBurst(btn, 6); last = n; } });
+    btn.addEventListener("click", function() {
+      spawnSnowBurst(btn, 12);
+      var c = btn.querySelector(":scope > .xmas-snow-cap"); if (!c) return;
+      c.style.transform = "translateY(2px) scaleY(0.35)";
+      setTimeout(function() { c.style.transform = ""; }, 1800);
+    });
+  });
+}
+function queueSnowScan() { if (!snowScanQueued) { snowScanQueued = true; requestAnimationFrame(applySnowToButtons); } }
+function initSnowButtons() {
+  queueSnowScan();
+  new MutationObserver(function(recs) {
+    for (var i = 0; i < recs.length; i++) {
+      var add = recs[i].addedNodes;
+      for (var j = 0; j < add.length; j++) { var n = add[j]; if (!(n.classList && (n.classList.contains("xmas-snow-burst") || n.classList.contains("xmas-snow-cap")))) { queueSnowScan(); return; } }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+  window.addEventListener("mousemove", function(e) { fx.windT = ((e.clientX / window.innerWidth) - 0.5) * 1.2; }, { passive: true });
+}
 
 // ===== DỮ LIỆU GỐC 45 HỌC SINH LỚP 12A6 =====
 var NAMES = [
@@ -2300,6 +2385,7 @@ $("btnData").onclick = function() {
 (function initUi() {
   applyDefaultBg();
   applyTheme();
+  initSnowButtons();
   selectTab("students");
   renderAll();
   ghPull(false, true);
