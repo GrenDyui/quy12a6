@@ -251,7 +251,26 @@
     html.xmas .xmas-btn-snow:active .xmas-snow-cap { transform: translateY(2px) scaleY(.45); opacity: .65; }
     .xmas-snow-burst { position: fixed; background: #fff; border-radius: 50%; pointer-events: none; z-index: 60; box-shadow: 0 0 6px rgba(255, 255, 255, .9); }
     html.xmas .glass-card { box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .55), inset 0 2px 6px rgba(255, 255, 255, .22); }
-  </style>
+  
+  /* ===== SƠ ĐỒ LỚP ===== */
+  .seat-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+  .seat-grid{display:grid;gap:6px}
+  .seat{position:relative;border-radius:12px;padding:6px 3px 5px;text-align:center;border:1.5px solid rgba(255,255,255,.14);background:rgba(15,23,42,.55);color:#fff;cursor:pointer;transition:transform .12s,opacity .15s;min-height:56px;display:flex;flex-direction:column;justify-content:center;gap:1px}
+  .seat:active{transform:scale(.95)}
+  .seat .sn{font-size:9px;font-weight:800;opacity:.7;line-height:1}
+  .seat .nm{font-size:11px;font-weight:800;line-height:1.1;word-break:break-word}
+  .seat .am{font-size:9px;font-weight:700;line-height:1;opacity:.9}
+  .seat.s-full,.seat-dot.s-full{background:rgba(16,185,129,.28);border-color:rgba(52,211,153,.7)}
+  .seat.s-part,.seat-dot.s-part{background:rgba(245,158,11,.28);border-color:rgba(251,191,36,.75)}
+  .seat.s-none,.seat-dot.s-none{background:rgba(244,63,94,.26);border-color:rgba(251,113,133,.75)}
+  .seat.s-free,.seat-dot.s-free{background:rgba(148,163,184,.22);border-color:rgba(203,213,225,.5)}
+  .seat.s-mask{opacity:.55}
+  .seat.dim{opacity:.22}
+  .seat.pick{outline:3px solid #38bdf8;transform:scale(1.04)}
+  .seat-board{border-radius:10px;background:linear-gradient(90deg,#14532d,#166534);border:2px solid #78350f;text-align:center;font-size:11px;font-weight:900;letter-spacing:.3em;padding:6px;color:#dcfce7}
+  .seat-tag{border-radius:10px;border:1.5px dashed rgba(255,255,255,.3);font-size:10px;font-weight:800;text-align:center;padding:6px 8px;color:#cbd5e1}
+  .seat-mode.on{background:linear-gradient(90deg,#0ea5e9,#6366f1);color:#fff}
+</style>
 </head>
 <body class="pb-28 sm:pb-10 mode-viewer">
 
@@ -401,8 +420,28 @@
           <button id="btnEditPeriod" class="h-8 px-3 rounded-lg bg-white/10 text-slate-200 border border-white/20 text-xs font-bold">Sửa kỳ</button>
         </div>
       </div>
+      <div class="px-4 pt-3 flex items-center gap-2 flex-wrap">
+        <button id="viewList" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold tabbtn-on">📋 Danh sách</button>
+        <button id="viewSeat" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold glass">🪑 Sơ đồ lớp</button>
+      </div>
       <div id="collectBar" class="px-4 py-2.5 border-b border-white/10 text-xs"></div>
       <div id="studentList" class="divide-y divide-white/10 max-h-[60vh] overflow-y-auto"></div>
+      <div id="seatView" class="hidden p-3 sm:p-4 space-y-3">
+        <div id="seatTools" class="admin-only flex items-center gap-1.5 flex-wrap text-xs">
+          <button data-seatmode="quick" class="seat-mode px-3 py-1.5 rounded-xl text-xs font-bold glass">💵 Thu nhanh</button>
+          <button data-seatmode="edit" class="seat-mode px-3 py-1.5 rounded-xl text-xs font-bold glass">✏️ Nhập số tiền</button>
+          <button data-seatmode="swap" class="seat-mode px-3 py-1.5 rounded-xl text-xs font-bold glass">🔀 Đổi chỗ</button>
+          <button id="seatReset" class="px-3 py-1.5 rounded-xl text-xs font-bold glass text-amber-300">↺ Sơ đồ gốc</button>
+        </div>
+        <p id="seatHint" class="text-[11px] text-slate-300"></p>
+        <div class="overflow-x-auto no-scrollbar pb-1">
+          <div id="seatMap" class="mx-auto" style="min-width:420px;max-width:760px"></div>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap text-[11px] text-slate-300">
+          <span><i class="seat-dot s-full"></i> Đủ</span><span><i class="seat-dot s-part"></i> Thiếu một phần</span>
+          <span><i class="seat-dot s-none"></i> Chưa nộp</span><span><i class="seat-dot s-free"></i> Miễn</span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1029,6 +1068,16 @@ function cleanTx(t, i) {
   o.img = /^receipts\/[A-Za-z0-9_.-]{1,60}\.jpg$/.test(String(t.img || "")) ? String(t.img) : "";
   return o;
 }
+var SEAT_DEFAULT = {
+  label: "Sơ đồ tuần 2 · lần 3",
+  cols: [
+    [5,27,44,24,28,4,13], [19,43,2,10,7,3,45],
+    [41,8,20,29,38,32,39],
+    [22,25,6,23,26,14,1,34],
+    [21,30,16,17,36,9,15,37],
+    [18,42,11,12,35,40,33,31]
+  ]
+};
 function normalizeDb(d) {
   Object.keys(d.sheets).forEach(function(k) {
     var sh = d.sheets[k];
@@ -1062,6 +1111,7 @@ function normalizeDb(d) {
   d.applied = (Array.isArray(d.applied) ? d.applied : []).filter(function(x) { return typeof x === "string" && x.length < 40; }).slice(-600);
   var g = d.goal;
   d.goal = (g && typeof g === "object" && Number(g.target) > 0) ? { title: String(g.title || "Mục tiêu quỹ").slice(0, 60), target: Number(g.target), deadline: parseDMY(g.deadline) ? String(g.deadline) : "" } : null;
+  d.seatMap = validSeatMap(d.seatMap) ? { label: String(d.seatMap.label || "").slice(0, 60), cols: d.seatMap.cols.map(function(c) { return c.slice(); }) } : cloneSeat(SEAT_DEFAULT);
   d.budget = { monthly: Math.max(Number(d.budget && d.budget.monthly) || 0, 0) };
   return d;
 }
@@ -1304,6 +1354,7 @@ function renderStudents(sh) {
       '</div></div>';
   }).join("") : '<div class="p-6 text-center text-xs text-slate-300">Không có học sinh nào phù hợp.</div>';
   el.scrollTop = scroll;
+  if (typeof renderSeat === "function") renderSeat(sh);
 }
 
 function renderMatrix() {
@@ -1817,6 +1868,109 @@ $("fileRestore").onchange = function(e) {
     if (confirm("Khôi phục sẽ thay toàn bộ dữ liệu hiện tại bằng nội dung file. Tiếp tục?")) acceptNewDb(p, "Đã khôi phục từ file!");
   };
   r.readAsText(f);
+};
+
+
+// ===== SƠ ĐỒ LỚP (thu quỹ theo chỗ ngồi) =====
+function cloneSeat(m) { return { label: m.label, cols: m.cols.map(function(c) { return c.slice(); }) }; }
+function validSeatMap(m) {
+  if (!m || !Array.isArray(m.cols) || m.cols.length < 1 || m.cols.length > 12) return false;
+  var seen = {}, n = 0;
+  for (var i = 0; i < m.cols.length; i++) {
+    if (!Array.isArray(m.cols[i])) return false;
+    for (var j = 0; j < m.cols[i].length; j++) {
+      var v = m.cols[i][j];
+      if (v === 0) continue;
+      if (!(v >= 1 && v <= NAMES.length) || seen[v]) return false;
+      seen[v] = 1; n++;
+    }
+  }
+  return n === NAMES.length;
+}
+function getSeatMap() {
+  if (!validSeatMap(db.seatMap)) db.seatMap = cloneSeat(SEAT_DEFAULT);
+  return db.seatMap;
+}
+function seatShortName(stt) {
+  var w = NAMES[stt - 1].split(" ").filter(function(x) { return x !== "Thị" && x !== "Văn"; });
+  return w.slice(-2).join(" ");
+}
+function seatStatus(s) {
+  if (s.fee === 0) return "s-free";
+  if (s.paid >= s.fee) return "s-full";
+  return s.paid > 0 ? "s-part" : "s-none";
+}
+state.view = "list"; state.seatMode = "quick"; state.seatPick = 0;
+
+function applyStudentView() {
+  var seat = state.view === "seat";
+  $("studentList").classList.toggle("hidden", seat);
+  $("seatView").classList.toggle("hidden", !seat);
+  $("viewList").className = "px-3.5 py-1.5 rounded-xl text-xs font-extrabold " + (seat ? "glass" : "tabbtn-on");
+  $("viewSeat").className = "px-3.5 py-1.5 rounded-xl text-xs font-extrabold " + (seat ? "tabbtn-on" : "glass");
+}
+function renderSeat(sh) {
+  var el = $("seatMap"); if (!el) return;
+  applyStudentView();
+  if (state.view !== "seat") return;
+  var map = getSeatMap(), cols = map.cols, q = removeTones(state.search.trim());
+  document.querySelectorAll(".seat-mode").forEach(function(b) { b.classList.toggle("on", b.getAttribute("data-seatmode") === state.seatMode); });
+  var hints = {
+    quick: "Bấm vào bạn để đổi nhanh giữa “Nộp đủ” và 0đ.",
+    edit: "Bấm vào bạn để nhập số tiền đã nộp.",
+    swap: state.seatPick ? "Đang chọn " + NAMES[state.seatPick - 1] + " — bấm bạn khác để hoán đổi chỗ." : "Bấm 2 bạn liên tiếp để hoán đổi chỗ ngồi."
+  };
+  $("seatHint").textContent = (map.label ? map.label + " · " : "") + (state.isAdmin ? hints[state.seatMode] : "Bấm vào bạn để xem hồ sơ.");
+
+  var maxRows = Math.max.apply(null, cols.map(function(c) { return c.length; }));
+  var html = '<div class="seat-board mb-2">BẢNG</div>' +
+    '<div class="flex items-center justify-between gap-2 mb-2"><span class="seat-tag">🧑‍🏫 BÀN GIÁO VIÊN</span><span class="text-[10px] text-slate-400 font-bold">Cô Võ Thị Cúc</span></div>' +
+    '<div class="seat-grid" style="grid-template-columns:repeat(' + cols.length + ',minmax(0,1fr))">';
+  for (var r = 0; r < maxRows; r++) {
+    for (var c = 0; c < cols.length; c++) {
+      var stt = cols[c][r];
+      if (!stt) { html += '<div></div>'; continue; }
+      var s = sh.students[stt - 1], vis = canSee(stt), cls = "seat ";
+      if (!vis) cls += "s-mask";
+      else cls += seatStatus(s);
+      var match = !q || (vis && (removeTones(NAMES[stt - 1]).indexOf(q) >= 0 || String(stt) === q));
+      var fm = state.filter === "all" ? true : (state.filter === "owe" ? s.paid < s.fee : s.paid >= s.fee);
+      if (!match || (vis && !fm)) cls += " dim";
+      if (state.seatPick === stt) cls += " pick";
+      var nm = vis ? esc(seatShortName(stt)) : esc(maskName(NAMES[stt - 1]));
+      var am = vis ? (s.fee === 0 ? "miễn" : (s.paid >= s.fee ? "✓" : (s.paid > 0 ? fmtK(s.paid) + "/" + fmtK(s.fee) : "-" + fmtK(s.fee)))) : "•";
+      html += '<div class="' + cls + '" onclick="seatTap(' + stt + ')" title="' + esc(vis ? NAMES[stt - 1] : "") + '"><span class="sn">#' + stt + '</span><span class="nm">' + nm + '</span><span class="am">' + am + '</span></div>';
+    }
+  }
+  html += '</div><div class="flex items-center justify-between mt-3"><span class="seat-tag">🚪 CỬA VÀO</span><span class="text-[10px] text-slate-400 font-bold">' + NAMES.length + ' chỗ</span></div>';
+  el.innerHTML = html;
+}
+function seatTap(stt) {
+  if (!state.isAdmin) { if (canSee(stt)) openStudentProfile(stt); return; }
+  var mode = state.seatMode;
+  if (mode === "quick") { toggleFull(stt); return; }
+  if (mode === "edit") { openPayModal("week", stt, state.week); return; }
+  // đổi chỗ
+  if (!state.seatPick) { state.seatPick = stt; renderSeat(db.sheets[state.week]); return; }
+  if (state.seatPick === stt) { state.seatPick = 0; renderSeat(db.sheets[state.week]); return; }
+  var a = state.seatPick, b = stt, map = getSeatMap();
+  saveDb(true);
+  var pa = null, pb = null;
+  map.cols.forEach(function(col, ci) { col.forEach(function(v, ri) { if (v === a) pa = [ci, ri]; if (v === b) pb = [ci, ri]; }); });
+  if (pa && pb) { map.cols[pa[0]][pa[1]] = b; map.cols[pb[0]][pb[1]] = a; }
+  logAct("sys", "Đổi chỗ: " + NAMES[a - 1] + " ⇄ " + NAMES[b - 1], 0);
+  state.seatPick = 0;
+  saveDb(false); renderAll(); toast("Đã đổi chỗ!");
+}
+$("viewList").onclick = function() { state.view = "list"; state.seatPick = 0; renderStudents(db.sheets[state.week]); };
+$("viewSeat").onclick = function() { state.view = "seat"; renderStudents(db.sheets[state.week]); };
+document.querySelectorAll(".seat-mode").forEach(function(b) {
+  b.onclick = function() { state.seatMode = b.getAttribute("data-seatmode"); state.seatPick = 0; renderSeat(db.sheets[state.week]); };
+});
+$("seatReset").onclick = function() {
+  if (!requireAdmin() || !confirm("Đưa sơ đồ lớp về bản gốc (tuần 2 · lần 3)?")) return;
+  saveDb(true); db.seatMap = cloneSeat(SEAT_DEFAULT); logAct("sys", "Đặt lại sơ đồ lớp về bản gốc", 0);
+  saveDb(false); renderAll();
 };
 
 // ===== TAB, THANH ĐIỀU HƯỚNG, BỘ LỌC =====
