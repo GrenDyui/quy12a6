@@ -254,11 +254,12 @@
   
   /* ===== SƠ ĐỒ LỚP ===== */
   .seat-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
-  .seat-grid{display:grid;gap:6px}
-  .seat{position:relative;border-radius:12px;padding:6px 3px 5px;text-align:center;border:1.5px solid rgba(255,255,255,.14);background:rgba(15,23,42,.55);color:#fff;cursor:pointer;transition:transform .12s,opacity .15s;min-height:56px;display:flex;flex-direction:column;justify-content:center;gap:1px}
+  .seat-grid{display:grid;gap:4px}
+  .seat-empty{background:transparent;border:1.5px dashed rgba(255,255,255,.18);cursor:default}
+  .seat{position:relative;border-radius:10px;padding:5px 1px 4px;text-align:center;border:1.5px solid rgba(255,255,255,.14);background:rgba(15,23,42,.55);color:#fff;cursor:pointer;transition:transform .12s,opacity .15s;min-height:56px;display:flex;flex-direction:column;justify-content:center;gap:1px}
   .seat:active{transform:scale(.95)}
   .seat .sn{font-size:9px;font-weight:800;opacity:.7;line-height:1}
-  .seat .nm{font-size:11px;font-weight:800;line-height:1.1;word-break:break-word}
+  .seat .nm{font-size:10px;font-weight:800;line-height:1.1;word-break:break-word}
   .seat .am{font-size:9px;font-weight:700;line-height:1;opacity:.9}
   .seat.s-full,.seat-dot.s-full{background:rgba(16,185,129,.28);border-color:rgba(52,211,153,.7)}
   .seat.s-part,.seat-dot.s-part{background:rgba(245,158,11,.28);border-color:rgba(251,191,36,.75)}
@@ -435,7 +436,7 @@
         </div>
         <p id="seatHint" class="text-[11px] text-slate-300"></p>
         <div class="overflow-x-auto no-scrollbar pb-1">
-          <div id="seatMap" class="mx-auto" style="min-width:420px;max-width:760px"></div>
+          <div id="seatMap" class="mx-auto" style="max-width:760px"></div>
         </div>
         <div class="flex items-center gap-3 flex-wrap text-[11px] text-slate-300">
           <span><i class="seat-dot s-full"></i> Đủ</span><span><i class="seat-dot s-part"></i> Thiếu một phần</span>
@@ -1069,15 +1070,16 @@ function cleanTx(t, i) {
   return o;
 }
 var SEAT_DEFAULT = {
+  v: 2,
   label: "Sơ đồ tuần 2 · lần 3",
   cols: [
-    [5,27,44,24,28,4,13], [19,43,2,10,7,3,45],
-    [41,8,20,29,38,32,39],
-    [22,25,6,23,26,14,1,34],
-    [21,30,16,17,36,9,15,37],
-    [18,42,11,12,35,40,33,31]
+    [0,7,39,34,21,11],   [0,10,32,1,30,12],
+    [4,19,38,14,37,31],  [28,43,29,26,15,33],
+    [24,2,20,23,9,40],   [44,13,0,6,36,35],
+    [27,3,41,25,17,18],  [5,45,8,22,16,42]
   ]
 };
+function cloneSeat(m) { return { v: 2, label: m.label, cols: m.cols.map(function(c) { return c.slice(); }) }; }
 function normalizeDb(d) {
   Object.keys(d.sheets).forEach(function(k) {
     var sh = d.sheets[k];
@@ -1111,7 +1113,7 @@ function normalizeDb(d) {
   d.applied = (Array.isArray(d.applied) ? d.applied : []).filter(function(x) { return typeof x === "string" && x.length < 40; }).slice(-600);
   var g = d.goal;
   d.goal = (g && typeof g === "object" && Number(g.target) > 0) ? { title: String(g.title || "Mục tiêu quỹ").slice(0, 60), target: Number(g.target), deadline: parseDMY(g.deadline) ? String(g.deadline) : "" } : null;
-  d.seatMap = validSeatMap(d.seatMap) ? { label: String(d.seatMap.label || "").slice(0, 60), cols: d.seatMap.cols.map(function(c) { return c.slice(); }) } : cloneSeat(SEAT_DEFAULT);
+  d.seatMap = validSeatMap(d.seatMap) ? { v: 2, label: String(d.seatMap.label || "").slice(0, 60), cols: d.seatMap.cols.map(function(c) { return c.slice(); }) } : cloneSeat(SEAT_DEFAULT);
   d.budget = { monthly: Math.max(Number(d.budget && d.budget.monthly) || 0, 0) };
   return d;
 }
@@ -1872,9 +1874,8 @@ $("fileRestore").onchange = function(e) {
 
 
 // ===== SƠ ĐỒ LỚP (thu quỹ theo chỗ ngồi) =====
-function cloneSeat(m) { return { label: m.label, cols: m.cols.map(function(c) { return c.slice(); }) }; }
 function validSeatMap(m) {
-  if (!m || !Array.isArray(m.cols) || m.cols.length < 1 || m.cols.length > 12) return false;
+  if (!m || m.v !== 2 || !Array.isArray(m.cols) || m.cols.length < 1 || m.cols.length > 12) return false;
   var seen = {}, n = 0;
   for (var i = 0; i < m.cols.length; i++) {
     if (!Array.isArray(m.cols[i])) return false;
@@ -1918,21 +1919,21 @@ function renderSeat(sh) {
   var hints = {
     quick: "Bấm vào bạn để đổi nhanh giữa “Nộp đủ” và 0đ.",
     edit: "Bấm vào bạn để nhập số tiền đã nộp.",
-    swap: state.seatPick ? "Đang chọn " + NAMES[state.seatPick - 1] + " — bấm bạn khác để hoán đổi chỗ." : "Bấm 2 bạn liên tiếp để hoán đổi chỗ ngồi."
+    swap: state.seatPick ? "Đang chọn " + NAMES[state.seatPick - 1] + " — bấm bạn khác (hoặc ô trống) để đổi chỗ." : "Bấm 2 bạn liên tiếp để hoán đổi chỗ ngồi."
   };
   $("seatHint").textContent = (map.label ? map.label + " · " : "") + (state.isAdmin ? hints[state.seatMode] : "Bấm vào bạn để xem hồ sơ.");
 
   var maxRows = Math.max.apply(null, cols.map(function(c) { return c.length; }));
-  var html = '<div class="seat-board mb-2">BẢNG</div>' +
-    '<div class="flex items-center justify-between gap-2 mb-2"><span class="seat-tag">🧑‍🏫 BÀN GIÁO VIÊN</span><span class="text-[10px] text-slate-400 font-bold">Cô Võ Thị Cúc</span></div>' +
-    '<div class="seat-grid" style="grid-template-columns:repeat(' + cols.length + ',minmax(0,1fr))">';
+  // 2 cột / tổ, chừa khoảng trống giữa các tổ như sơ đồ thật
+  var tpl = cols.map(function(_, i) { return (i > 0 && i % 2 === 0 ? "10px " : "") + "minmax(0,1fr)"; }).join(" ");
+  var html = '<div class="seat-grid" style="grid-template-columns:' + tpl + '">';
   for (var r = 0; r < maxRows; r++) {
     for (var c = 0; c < cols.length; c++) {
+      if (c > 0 && c % 2 === 0) html += '<div></div>';
       var stt = cols[c][r];
-      if (!stt) { html += '<div></div>'; continue; }
+      if (!stt) { html += '<div class="seat seat-empty" onclick="seatEmpty(' + c + ',' + r + ')"></div>'; continue; }
       var s = sh.students[stt - 1], vis = canSee(stt), cls = "seat ";
-      if (!vis) cls += "s-mask";
-      else cls += seatStatus(s);
+      if (!vis) cls += "s-mask"; else cls += seatStatus(s);
       var match = !q || (vis && (removeTones(NAMES[stt - 1]).indexOf(q) >= 0 || String(stt) === q));
       var fm = state.filter === "all" ? true : (state.filter === "owe" ? s.paid < s.fee : s.paid >= s.fee);
       if (!match || (vis && !fm)) cls += " dim";
@@ -1942,8 +1943,18 @@ function renderSeat(sh) {
       html += '<div class="' + cls + '" onclick="seatTap(' + stt + ')" title="' + esc(vis ? NAMES[stt - 1] : "") + '"><span class="sn">#' + stt + '</span><span class="nm">' + nm + '</span><span class="am">' + am + '</span></div>';
     }
   }
-  html += '</div><div class="flex items-center justify-between mt-3"><span class="seat-tag">🚪 CỬA VÀO</span><span class="text-[10px] text-slate-400 font-bold">' + NAMES.length + ' chỗ</span></div>';
+  html += '</div>' +
+    '<div class="flex items-center justify-between gap-2 mt-3">' +
+      '<span class="seat-tag">🚪 CỬA VÀO ➜</span>' +
+      '<div class="seat-board flex-1" style="max-width:220px">BẢNG</div>' +
+      '<span class="seat-tag">🧑‍🏫 BÀN GV<br><span class="text-[9px] font-semibold">Cô Võ Thị Cúc</span></span>' +
+    '</div>';
   el.innerHTML = html;
+}
+function seatFind(stt) {
+  var pos = null;
+  getSeatMap().cols.forEach(function(col, ci) { col.forEach(function(v, ri) { if (v === stt) pos = [ci, ri]; }); });
+  return pos;
 }
 function seatTap(stt) {
   if (!state.isAdmin) { if (canSee(stt)) openStudentProfile(stt); return; }
@@ -1955,12 +1966,21 @@ function seatTap(stt) {
   if (state.seatPick === stt) { state.seatPick = 0; renderSeat(db.sheets[state.week]); return; }
   var a = state.seatPick, b = stt, map = getSeatMap();
   saveDb(true);
-  var pa = null, pb = null;
-  map.cols.forEach(function(col, ci) { col.forEach(function(v, ri) { if (v === a) pa = [ci, ri]; if (v === b) pb = [ci, ri]; }); });
+  var pa = seatFind(a), pb = seatFind(b);
   if (pa && pb) { map.cols[pa[0]][pa[1]] = b; map.cols[pb[0]][pb[1]] = a; }
   logAct("sys", "Đổi chỗ: " + NAMES[a - 1] + " ⇄ " + NAMES[b - 1], 0);
   state.seatPick = 0;
   saveDb(false); renderAll(); toast("Đã đổi chỗ!");
+}
+function seatEmpty(c, r) {
+  if (!state.isAdmin || state.seatMode !== "swap" || !state.seatPick) return;
+  var a = state.seatPick, map = getSeatMap(), pa = seatFind(a);
+  if (!pa) return;
+  saveDb(true);
+  map.cols[pa[0]][pa[1]] = 0; map.cols[c][r] = a;
+  logAct("sys", "Chuyển chỗ: " + NAMES[a - 1], 0);
+  state.seatPick = 0;
+  saveDb(false); renderAll(); toast("Đã chuyển chỗ!");
 }
 $("viewList").onclick = function() { state.view = "list"; state.seatPick = 0; renderStudents(db.sheets[state.week]); };
 $("viewSeat").onclick = function() { state.view = "seat"; renderStudents(db.sheets[state.week]); };
