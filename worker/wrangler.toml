@@ -1,0 +1,8 @@
+name = "quy12a6-api"
+main = "cloudflare-worker.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+GITHUB_OWNER = "GrenDyui"
+GITHUB_REPO = "quy12a6"
+ALLOWED_ORIGIN = "https://grendyui.github.io"

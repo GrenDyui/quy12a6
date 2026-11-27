@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "alg": "AES-256-GCM",
+  "kdf": "PBKDF2-SHA256",
+  "iter": 600000,
+  "owner": "GrenDyui",
+  "repo": "quy12a6",
+  "unlockAdmin": true,
+  "hint": "",
+  "salt": "yjNHwZHRMDU+WIuVZvZomQ==",
+  "iv": "RvTAgVVRTt1W+qHm",
+  "ct": "gRfYoNmsgqoa0XPBqGY0cOJXcsAdkIcNscLuthw0HlAb4lIvBBq4bnmqLTHXPN+tFkOoHVALV2MnSXRwFWgHpKEjt9U6/HTsb4grJPrNB9LeXzIQtAJ6DilXe5KDOetptNAc8bWHqMdtELqxu9rdFKaMojmBtu4o9aZBFp9DzcWQSw==",
+  "updatedAt": 1795767719594
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Sổ Quỹ Lớp 12A6",
+  "short_name": "Quỹ 12A6",
+  "description": "Hệ thống quản lý sổ quỹ lớp 12A6 minh bạch — theo dõi thu chi, VietQR, sơ đồ lớp và báo cáo.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090e1a",
+  "theme_color": "#090e1a",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
